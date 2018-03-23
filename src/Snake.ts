@@ -71,11 +71,13 @@ class Game {
     }
 }
 
-
 class Snake {
 
     public playerNum: number
     public keyMap: KeyMap;
+    private _headColor: string;
+    private _segments: number;
+    private _colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
 
     constructor(playerNum: number, keyMap: KeyMap){
         this.keyMap = keyMap;
@@ -83,12 +85,13 @@ class Snake {
     }
 
     draw() {
-
+        let color = this._headColor;
+        for (let i = 0; i < this._segments; i++) {
+            //stuff
+            color
+        }
     }
 }
-
-class Segment {}
-
 
 type KeyMap = {up: number, right: number, down: number, left: number};
 type Direction = 'up' | 'right' | 'left' | 'down';
