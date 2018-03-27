@@ -1,6 +1,17 @@
 type Direction = 'up' | 'left' | 'down' | 'right';
 type KeyMap = {up: number, left: number, down: number, right: number};
 
+enum Colors {
+    RED = '#511313',
+    ORANGE = '#54391e',
+    YELLOW = '#4f4416',
+    GREEN = '#0f401f',
+    BLUE = '#171438',
+    PURPLE = '#220032',
+    RANDOM = 'RANDOM',
+    RAINBOW = 'RAINBOW'
+}
+
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
 let foodCoord: {x: number, y: number};
@@ -23,7 +34,7 @@ const gridWidths = {1: 12, 2: 18, 3: 24, 4: 30, 5: 36};
 const directions = {up: 0, left: 1, down: 2, right: 3};
 const backgroundColor = '#000000';
 const gridLineColor = '#11293B';
-const colors = ['#511313', '#54391e', '#4f4416', '#0f401f', '#171438', '#220032'];
+const colors = [Colors.RED, Colors.ORANGE, Colors.YELLOW, Colors.GREEN, Colors.BLUE, Colors.PURPLE];
 
 
 
@@ -85,14 +96,22 @@ class Snake {
     private _playerNum: number;
     public keyMap: KeyMap;
     public direction: number;
-    private _color: string = colors[0];
+    private _color: Colors;
     private _segments: {x: number, y: number}[];
     public segmentsToAdd = 0;
+    private _colors: {r: number[], g: number[], b: number[]};
     
-    constructor(playerNum: number, keyMap: KeyMap) {
+    constructor(playerNum: number, keyMap: KeyMap, colorOption: Colors) {
         this.keyMap = keyMap;
         this._playerNum = playerNum;
-        this._segments
+        this._color = colorOption;
+        if (colorOption = Colors.RANDOM) {
+            this._colors = {
+                r: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
+                g: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
+                b: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+            };
+        }
         if (playerNum === 1) {
             this._segments = [{x: 3 * gridWidth / 4 - 1, y: gridHeight / 4}];
             this.direction = 1;
@@ -105,7 +124,7 @@ class Snake {
     draw() {
         const translation = gridLineWidth / 2;
         const snakeWidth = squareHeight - gridLineWidth;
-        if (isOnePlayer) {
+        if (this._color === Colors.RAINBOW) {
             let colorCount = 0;
             for (let segment of this._segments) {
                 context.fillStyle = colors[colorCount];
@@ -113,8 +132,22 @@ class Snake {
                 context.fillRect(segment.x * squareHeight + translation, 
                     segment.y * squareHeight + translation, snakeWidth, snakeWidth);
             }
-        } else {
-            context.fillStyle = (this._playerNum === 1) ? colors[0] : colors[4];
+        } else if (this._color === Colors.RANDOM) {
+            let count = 0;
+            for (let segment of this._segments) {
+                const frac = count / ((this._segments.length - 1) || 1);
+                count++;
+                let color = {r: 0, g: 0, b: 0};
+                for (let c in this._colors) {
+                    color[c] = this._colors[c][0] + Math.round(frac * (this._colors[c][1] - this._colors[c][0]));
+                }
+                context.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                context.fillRect(segment.x * squareHeight + translation, 
+                    segment.y * squareHeight + translation, snakeWidth, snakeWidth);
+            }
+        }
+        else {
+            context.fillStyle = this._color;
             for (let segment of this._segments) {
                 context.fillRect(segment.x * squareHeight + translation, 
                     segment.y * squareHeight + translation, snakeWidth, snakeWidth);
@@ -193,9 +226,9 @@ class Game {
         gridWidth = gridWidths[options.gridSize];
         gridHeight = gridWidth * 2 / 3;
         growthPerFood = gridWidth / 6;
-        this._snakes = [new Snake(1, {left: 37, up: 38, right: 39,  down: 40})];
+        this._snakes = [new Snake(1, {left: 37, up: 38, right: 39,  down: 40}, Colors.RANDOM)];
         if (options.playerNum === 2) {
-            this._snakes.push(new Snake(2, {left: 65, up: 87, right: 68,  down: 83}));
+            this._snakes.push(new Snake(2, {left: 65, up: 87, right: 68,  down: 83}, Colors.RAINBOW));
         }
         this.startAnimation();
     }
@@ -212,6 +245,7 @@ class Game {
         if (pause) {
             if (!this._paused) {
                 this.stopAnimation();
+                this._drawGrid();
             } else {
                 return;
             }
