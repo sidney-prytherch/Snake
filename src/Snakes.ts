@@ -18,7 +18,7 @@ const canvasBorder = 4;
 const paddingHeightPercent = .02;
 const minMenuBarWidth = 200;
 const menuBarWidthPercent = .2;
-const difficulties = {1: 600, 2: 500, 3: 400, 4: 300, 5: 200};
+const difficulties = {1: 400, 2: 300, 3: 200, 4: 150, 5: 100};
 const gridWidths = {1: 12, 2: 18, 3: 24, 4: 30, 5: 36};
 const directions = {up: 0, left: 1, down: 2, right: 3};
 const backgroundColor = '#000000';
@@ -29,7 +29,7 @@ const colors = ['#511313', '#54391e', '#4f4416', '#0f401f', '#171438', '#220032'
 
 window.addEventListener('keydown', (event) => {
     if (event.keyCode === 49) {
-        game._snakes[0].segmentsToAdd+=2;//TODO:remove
+        game._snakes[0].segmentsToAdd+=growthPerFood;//TODO:remove
     }
     if (event.keyCode === 32) {
         game.pause();
@@ -42,7 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement;
     context = canvas.getContext('2d');
     game = new Game();
-    game.startGame({playerNum: 1, difficulty: 5, gridSize: 1});
+    game.startGame({playerNum: 1, difficulty: 5, gridSize: 5});
     isOnePlayer = true;
     game.recalculateAndDrawGrid();
 }, false);
@@ -192,7 +192,7 @@ class Game {
         this._difficulty = difficulties[options.difficulty];
         gridWidth = gridWidths[options.gridSize];
         gridHeight = gridWidth * 2 / 3;
-        growthPerFood = gridWidth / 2;
+        growthPerFood = gridWidth / 6;
         this._snakes = [new Snake(1, {left: 37, up: 38, right: 39,  down: 40})];
         if (options.playerNum === 2) {
             this._snakes.push(new Snake(2, {left: 65, up: 87, right: 68,  down: 83}));
