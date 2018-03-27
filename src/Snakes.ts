@@ -23,14 +23,16 @@ const gridWidths = {1: 12, 2: 18, 3: 24, 4: 30, 5: 36};
 const directions = {up: 0, left: 1, down: 2, right: 3};
 const backgroundColor = '#000000';
 const gridLineColor = '#11293B';
-const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082'];
+const colors = ['#511313', '#54391e', '#4f4416', '#0f401f', '#171438', '#220032'];
 
 
 
 window.addEventListener('keydown', (event) => {
-    if (event.keyCode === 32) {
+    if (event.keyCode === 49) {
         game._snakes[0].segmentsToAdd+=2;//TODO:remove
-        //game.pause();
+    }
+    if (event.keyCode === 32) {
+        game.pause();
     } else if (!game.paused) {
         game.checkKeyDown(event.keyCode);
     }
@@ -40,14 +42,20 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement;
     context = canvas.getContext('2d');
     game = new Game();
-    game.startGame({playerNum: 1, difficulty: 5, gridSize: 3});
-    isOnePlayer = false;
+    game.startGame({playerNum: 1, difficulty: 5, gridSize: 1});
+    isOnePlayer = true;
     game.recalculateAndDrawGrid();
 }, false);
 
 window.addEventListener('resize', () => {
     game.resize();
 }, false);
+
+window.addEventListener('visibilitychange', function() {
+    if (document.hidden){
+        game.pause(true);
+    }
+});
 
 
 
@@ -189,20 +197,28 @@ class Game {
         if (options.playerNum === 2) {
             this._snakes.push(new Snake(2, {left: 65, up: 87, right: 68,  down: 83}));
         }
+        this.startAnimation();
+    }
+    
+    public startAnimation() {
         this._loopId = requestAnimationFrame(this._gameLoop);
+    }
 
+    public stopAnimation() {
+        cancelAnimationFrame(this._loopId);
     }
     
     public pause(pause: boolean = !this._paused) {
         if (pause) {
             if (!this._paused) {
-                this._paused = true;
-                //other stuff
+                this.stopAnimation();
+            } else {
+                return;
             }
         } else if (this._paused) {
-            this._paused = false;
-            //other stuff
+            this.startAnimation();
         }
+        this._paused = pause;
     }
     
     public resize() {
@@ -233,10 +249,10 @@ class Game {
         context.fillRect(0, 0, context.canvas.width, context.canvas.height);
         context.lineWidth = gridLineWidth;
         context.strokeStyle = gridLineColor;
-        for (let i = squareHeight; i < context.canvas.height; i += squareHeight) {
+        for (let i = 0; i <= context.canvas.height; i += squareHeight) {
             drawLine(0, Math.round(i), context.canvas.width, Math.round(i));
         }
-        for (let i = squareHeight; i < context.canvas.width; i += squareHeight) {
+        for (let i = 0; i <= context.canvas.width; i += squareHeight) {
             drawLine(i, 0, i, context.canvas.height);
         }
         function drawLine(x1: number, y1: number, x2: number, y2: number) {
