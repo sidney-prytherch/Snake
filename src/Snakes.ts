@@ -3,10 +3,10 @@ type KeyMap = {up: number, left: number, down: number, right: number};
 type Coord = {x: number, y: number};
 
 
-const gameSettings = {playerNum: 1, difficulty: 1, gridSize: 1};
+const gameSettings = {playerNum: 1, difficulty: 5, gridSize: 4};
 
 enum Colors {
-    FOOD = '#3F250B',
+    FOOD = '#683200',
     RED = '#511313',
     ORANGE = '#54391E',
     YELLOW = '#4F4416',
@@ -64,6 +64,9 @@ window.addEventListener('keydown', (event) => {
                 if (event.keyCode === snake.keyMap[property]) {
                     if (snake.direction % 2 !== directions[property] % 2) {
                         snake.newDirection = directions[property];
+                        snake.queuedDirection = null;
+                    } else {
+                        snake.queuedDirection = directions[property];
                     }
                     return;
                 }
@@ -120,6 +123,7 @@ class Snake {
     public keyMap: KeyMap;
     public direction: number;
     public newDirection: number;
+    public queuedDirection: number;
     private _color: Colors;
     private _segments: Coord[];
     private _segmentsToAdd: number;
@@ -138,12 +142,13 @@ class Snake {
             };
         }
         if (playerNum === 1) {
-            this._segments = [{x: 3 * gridWidth / 4 - 1, y: gridHeight / 4}];
+            this._segments = [{x: 5 * gridWidth / 6 - 1, y: gridHeight / 4}];
             this.newDirection = this.direction = 1;
         } else {
-            this._segments = [{x: gridWidth / 4, y: 3 * gridHeight / 4 - 1}];
+            this._segments = [{x: gridWidth / 6, y: 3 * gridHeight / 4 - 1}];
             this.newDirection = this.direction = 3;
         }
+        console.warn(this._segments);
         removeCoord(game.freeSpots, this._head);
     }
     
@@ -211,6 +216,10 @@ class Snake {
             y: this._head.y + ((this.newDirection % 2 === 0) ? this.newDirection - 1 : 0)
         };
         this.direction = this.newDirection;
+        if (!!this.queuedDirection) {
+            this.newDirection = this.queuedDirection;
+            this.queuedDirection = null;
+        }
         this._segments.unshift(newHead);
         removeCoord(game.freeSpots, newHead);
         this._checkFood();
@@ -335,6 +344,7 @@ class Game {
 
     public stopAnimation() {
         cancelAnimationFrame(this._loopId);
+        this._lastTimeStamp = null;
     }
     
     public pause(pause: boolean = !this._paused) {
