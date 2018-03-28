@@ -217,7 +217,9 @@ class Snake {
         };
         this.direction = this.newDirection;
         if (!!this.queuedDirection) {
-            this.newDirection = this.queuedDirection;
+            if (this.direction % 2 !== this.queuedDirection % 2) {
+                this.newDirection = this.queuedDirection;
+            }
             this.queuedDirection = null;
         }
         this._segments.unshift(newHead);
