@@ -288,6 +288,7 @@ class Game {
                 }
                 if (this._gameOver) {
                     //do stuff
+                    return;
                 }
                 if (this.foodEaten) {
                     this._spawnFood();
