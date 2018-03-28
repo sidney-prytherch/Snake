@@ -2,6 +2,9 @@ type Direction = 'up' | 'left' | 'down' | 'right';
 type KeyMap = {up: number, left: number, down: number, right: number};
 type Coord = {x: number, y: number};
 
+
+const gameSettings = {playerNum: 1, difficulty: 1, gridSize: 1};
+
 enum Colors {
     FOOD = '#3F250B',
     RED = '#511313',
@@ -56,7 +59,16 @@ window.addEventListener('keydown', (event) => {
     if (event.keyCode === 32) {
         game.pause();
     } else if (!game.paused) {
-        game.checkKeyDown(event.keyCode);
+        for (let snake of snakes) {
+            for (let property in snake.keyMap) {
+                if (event.keyCode === snake.keyMap[property]) {
+                    if (snake.direction % 2 !== directions[property] % 2) {
+                        snake.newDirection = directions[property];
+                    }
+                    return;
+                }
+            }
+        }
     }
 }, false);
 
@@ -64,8 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement;
     context = canvas.getContext('2d');
     game = new Game();
-    game.startGame({playerNum: 2, difficulty: 1, gridSize: 1});
-    isOnePlayer = true;
+    game.startGame(gameSettings);
     game.recalculateAndDrawGrid();
 }, false);
 
@@ -108,6 +119,7 @@ class Snake {
     public score: number;
     public keyMap: KeyMap;
     public direction: number;
+    public newDirection: number;
     private _color: Colors;
     private _segments: Coord[];
     private _segmentsToAdd: number;
@@ -127,10 +139,10 @@ class Snake {
         }
         if (playerNum === 1) {
             this._segments = [{x: 3 * gridWidth / 4 - 1, y: gridHeight / 4}];
-            this.direction = 1;
+            this.newDirection = this.direction = 1;
         } else {
             this._segments = [{x: gridWidth / 4, y: 3 * gridHeight / 4 - 1}];
-            this.direction = 3;
+            this.newDirection = this.direction = 3;
         }
         removeCoord(game.freeSpots, this._head);
     }
@@ -195,9 +207,10 @@ class Snake {
 
     public move() {
         const newHead = {
-            x: this._head.x + ((this.direction % 2 === 1) ? this.direction - 2 : 0),
-            y: this._head.y + ((this.direction % 2 === 0) ? this.direction - 1 : 0)
+            x: this._head.x + ((this.newDirection % 2 === 1) ? this.newDirection - 2 : 0),
+            y: this._head.y + ((this.newDirection % 2 === 0) ? this.newDirection - 1 : 0)
         };
+        this.direction = this.newDirection;
         this._segments.unshift(newHead);
         removeCoord(game.freeSpots, newHead);
         this._checkFood();
@@ -366,11 +379,11 @@ class Game {
         context.fillRect(0, 0, context.canvas.width, context.canvas.height);
         context.lineWidth = gridLineWidth;
         context.strokeStyle = gridLineColor;
-        for (let i = 0; i <= context.canvas.height; i += squareHeight) {
-            drawLine(0, Math.round(i), context.canvas.width, Math.round(i));
+        for (let i = 0; i <= gridHeight; i ++) {
+            drawLine(0, i * squareHeight, context.canvas.width, i * squareHeight);
         }
-        for (let i = 0; i <= context.canvas.width; i += squareHeight) {
-            drawLine(i, 0, i, context.canvas.height);
+        for (let i = 0; i <= gridWidth; i ++) {
+            drawLine(i * squareHeight, 0, i * squareHeight, context.canvas.height);
         }
         function drawLine(x1: number, y1: number, x2: number, y2: number) {
             context.beginPath();
@@ -383,18 +396,5 @@ class Game {
 
     public get paused() {
         return this._paused;
-    }
-
-    public checkKeyDown(keyCode: number) {
-        for (let snake of snakes) {
-            for (let property in snake.keyMap) {
-                if (keyCode === snake.keyMap[property]) {
-                    if (snake.direction + 2 % 4 !== directions[property]) {
-                        snake.direction = directions[property]
-                    }
-                    return;
-                }
-            }
-        }
     }
 }
