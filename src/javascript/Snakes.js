@@ -1,9 +1,10 @@
 var Colors;
 (function (Colors) {
+    Colors["FOOD"] = "#3F250B";
     Colors["RED"] = "#511313";
-    Colors["ORANGE"] = "#54391e";
-    Colors["YELLOW"] = "#4f4416";
-    Colors["GREEN"] = "#0f401f";
+    Colors["ORANGE"] = "#54391E";
+    Colors["YELLOW"] = "#4F4416";
+    Colors["GREEN"] = "#0F401F";
     Colors["BLUE"] = "#171438";
     Colors["PURPLE"] = "#220032";
     Colors["RANDOM"] = "RANDOM";
@@ -19,21 +20,31 @@ let squareHeight;
 let growthPerFood;
 let gridLineWidth;
 let isOnePlayer;
+let snakes;
+let food;
 const heightToWidthRatio = 3 / 2;
 const minPxlPadding = 10;
 const canvasBorder = 4;
 const paddingHeightPercent = .02;
 const minMenuBarWidth = 200;
 const menuBarWidthPercent = .2;
-const difficulties = { 1: 400, 2: 300, 3: 200, 4: 150, 5: 100 };
+const difficulties = { 1: 1000, 2: 300, 3: 200, 4: 150, 5: 100 };
 const gridWidths = { 1: 12, 2: 18, 3: 24, 4: 30, 5: 36 };
 const directions = { up: 0, left: 1, down: 2, right: 3 };
 const backgroundColor = '#000000';
 const gridLineColor = '#11293B';
 const colors = [Colors.RED, Colors.ORANGE, Colors.YELLOW, Colors.GREEN, Colors.BLUE, Colors.PURPLE];
+function removeCoord(coords, element) {
+    for (let i = 0; i < coords.length; i++) {
+        if (coords[i].x === element.x && coords[i].y === element.y) {
+            coords.splice(i, 1);
+            return;
+        }
+    }
+}
 window.addEventListener('keydown', (event) => {
     if (event.keyCode === 49) {
-        game._snakes[0].segmentsToAdd += growthPerFood; //TODO:remove
+        snakes[0]._segmentsToAdd += growthPerFood; //TODO:remove
     }
     if (event.keyCode === 32) {
         game.pause();
@@ -46,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementsByTagName('canvas')[0];
     context = canvas.getContext('2d');
     game = new Game();
-    game.startGame({ playerNum: 1, difficulty: 5, gridSize: 5 });
+    game.startGame({ playerNum: 2, difficulty: 1, gridSize: 1 });
     isOnePlayer = true;
     game.recalculateAndDrawGrid();
 }, false);
@@ -60,7 +71,7 @@ window.addEventListener('visibilitychange', function () {
 });
 class Snake {
     constructor(playerNum, keyMap, colorOption) {
-        this.segmentsToAdd = 0;
+        this._segmentsToAdd = 0;
         this.keyMap = keyMap;
         this._playerNum = playerNum;
         this._color = colorOption;
@@ -79,6 +90,7 @@ class Snake {
             this._segments = [{ x: gridWidth / 4, y: 3 * gridHeight / 4 - 1 }];
             this.direction = 3;
         }
+        removeCoord(game.freeSpots, this._head);
     }
     draw() {
         const translation = gridLineWidth / 2;
@@ -111,16 +123,41 @@ class Snake {
             }
         }
     }
+    _checkFood() {
+        if (this._head.x === food.x && this._head.y === food.y) {
+            this.score++;
+            game.foodEaten = true;
+            this._segmentsToAdd += growthPerFood;
+        }
+    }
+    checkForGameOver() {
+        if (this._head.x < 0 || this._head.x > gridWidth || this._head.y < 0 || this._head.y > gridHeight) {
+            game.gameOver(this._playerNum);
+        }
+        for (let snake of snakes) {
+            for (let segment of snake._segments) {
+                if (this._head !== segment && this._head.x === segment.x && this._head.y === segment.y) {
+                    game.gameOver(this._playerNum);
+                }
+            }
+        }
+    }
+    get _head() {
+        return this._segments[0];
+    }
     move() {
-        this._segments.unshift({
-            x: this._segments[0].x + ((this.direction % 2 === 1) ? this.direction - 2 : 0),
-            y: this._segments[0].y + ((this.direction % 2 === 0) ? this.direction - 1 : 0)
-        });
-        if (this.segmentsToAdd > 0) {
-            this.segmentsToAdd--;
+        const newHead = {
+            x: this._head.x + ((this.direction % 2 === 1) ? this.direction - 2 : 0),
+            y: this._head.y + ((this.direction % 2 === 0) ? this.direction - 1 : 0)
+        };
+        this._segments.unshift(newHead);
+        removeCoord(game.freeSpots, newHead);
+        this._checkFood();
+        if (this._segmentsToAdd > 0) {
+            this._segmentsToAdd--;
         }
         else {
-            this._segments.pop();
+            game.freeSpots.push(this._segments.pop());
         }
     }
 }
@@ -131,24 +168,61 @@ class Game {
             if (!this._lastTimeStamp || (timestamp - this._lastTimeStamp) > this._difficulty) {
                 this._lastTimeStamp = timestamp;
                 this._drawGrid();
-                for (let snake of this._snakes) {
+                for (let snake of snakes) {
                     snake.move();
                     snake.draw();
                 }
+                for (let snake of snakes) {
+                    snake.checkForGameOver();
+                }
+                if (this._gameOver) {
+                    //do stuff
+                }
+                if (this.foodEaten) {
+                    this._spawnFood();
+                }
+                const translation = gridLineWidth * 2;
+                const foodWidth = squareHeight - 4 * gridLineWidth;
+                context.fillStyle = Colors.FOOD;
+                context.fillRect(food.x * squareHeight + translation, food.y * squareHeight + translation, foodWidth, foodWidth);
             }
-            this._loopId = requestAnimationFrame(this._gameLoop);
+            if (!this._paused && !this._gameOver) {
+                this._loopId = requestAnimationFrame(this._gameLoop);
+            }
         };
     }
+    _spawnFood() {
+        this.foodEaten = false;
+        if (this.freeSpots.length === 0) {
+            this.gameOver(-1);
+            return;
+        }
+        food = this.freeSpots[Math.floor(Math.random() * this.freeSpots.length)];
+    }
+    gameOver(playerNum) {
+        this._gameOver = true;
+        this._losers.push(playerNum);
+        this.pause(true);
+    }
     startGame(options) {
+        this._losers = [];
+        this._gameOver = false;
         this._playerNum = options.playerNum;
         this._difficulty = difficulties[options.difficulty];
         gridWidth = gridWidths[options.gridSize];
         gridHeight = gridWidth * 2 / 3;
-        growthPerFood = gridWidth / 6;
-        this._snakes = [new Snake(1, { left: 37, up: 38, right: 39, down: 40 }, Colors.RANDOM)];
-        if (options.playerNum === 2) {
-            this._snakes.push(new Snake(2, { left: 65, up: 87, right: 68, down: 83 }, Colors.RAINBOW));
+        this.freeSpots = [];
+        for (let x = 0; x < gridWidth; x++) {
+            for (let y = 0; y < gridHeight; y++) {
+                this.freeSpots.push({ x, y });
+            }
         }
+        growthPerFood = gridWidth / 6;
+        snakes = [new Snake(1, { left: 37, up: 38, right: 39, down: 40 }, Colors.RANDOM)];
+        if (options.playerNum === 2) {
+            snakes.push(new Snake(2, { left: 65, up: 87, right: 68, down: 83 }, Colors.RAINBOW));
+        }
+        this._spawnFood();
         this.startAnimation();
     }
     startAnimation() {
@@ -215,7 +289,7 @@ class Game {
         return this._paused;
     }
     checkKeyDown(keyCode) {
-        for (let snake of this._snakes) {
+        for (let snake of snakes) {
             for (let property in snake.keyMap) {
                 if (keyCode === snake.keyMap[property]) {
                     if (snake.direction + 2 % 4 !== directions[property]) {
