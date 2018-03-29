@@ -3,6 +3,11 @@ canvas {
     border: 4px solid rgb(37, 93, 136);
 }
 
+#menu {
+    position: absolute;
+    background-color: black;
+}
+
 body {
     background-color: rgb(27, 62, 88);
 }

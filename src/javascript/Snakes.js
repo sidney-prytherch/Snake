@@ -1,4 +1,3 @@
-const gameSettings = { playerNum: 1, difficulty: 5, gridSize: 4 };
 var Colors;
 (function (Colors) {
     Colors["FOOD"] = "#683200";
@@ -12,6 +11,7 @@ var Colors;
     Colors["RAINBOW"] = "RAINBOW";
 })(Colors || (Colors = {}));
 let canvas;
+let menu;
 let context;
 let foodCoord;
 let game;
@@ -23,6 +23,10 @@ let gridLineWidth;
 let isOnePlayer;
 let snakes;
 let food;
+let snakeColors = { 1: Colors.RANDOM, 2: Colors.RANDOM };
+let difficulty = 3;
+let gridSize = 1;
+let numberOfPlayers = 2;
 const heightToWidthRatio = 3 / 2;
 const minPxlPadding = 10;
 const canvasBorder = 4;
@@ -43,12 +47,23 @@ function removeCoord(coords, element) {
         }
     }
 }
+function setUpMenu() {
+    menu.style.height = parseInt(canvas.style.height, 10) - 2 * squareHeight - gridLineWidth / 2 + 'px';
+    menu.style.width = parseInt(canvas.style.width, 10) - gridLineWidth / 2 + 'px';
+    menu.style.top = parseInt(canvas.style.top, 10) + 2 * squareHeight + canvasBorder + 'px';
+    menu.style.left = parseInt(canvas.style.left, 10) + canvasBorder + 'px';
+}
 window.addEventListener('keydown', (event) => {
     if (event.keyCode === 49) {
         snakes[0]._segmentsToAdd += growthPerFood; //TODO:remove
     }
     if (event.keyCode === 32) {
-        game.pause();
+        if (game.hasStarted) {
+            game.pause();
+        }
+        else {
+            game.startGame();
+        }
     }
     else if (!game.paused) {
         for (let snake of snakes) {
@@ -68,23 +83,33 @@ window.addEventListener('keydown', (event) => {
     }
 }, false);
 window.addEventListener('DOMContentLoaded', () => {
+    menu = document.getElementById('menu');
     canvas = document.getElementsByTagName('canvas')[0];
     context = canvas.getContext('2d');
     game = new Game();
-    game.startGame(gameSettings);
-    game.recalculateAndDrawGrid();
+    game.init();
+    game.makeFakeSnakes();
+    setUpMenu();
+    //game.startGame(gameSettings);
 }, false);
 window.addEventListener('resize', () => {
     game.resize();
+    if (!game.hasStarted) {
+        for (let snake of snakes) {
+            snake.draw();
+        }
+        setUpMenu();
+    }
 }, false);
 window.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
+    if (document.hidden && game.hasStarted) {
         game.pause(true);
     }
 });
 class Snake {
-    constructor(playerNum, keyMap, colorOption) {
-        this._segmentsToAdd = 0;
+    constructor(playerNum, keyMap, colorOption, isFake = false) {
+        this._isFake = isFake;
+        this._segmentsToAdd = (this._isFake) ? growthPerFood : 0;
         this.keyMap = keyMap;
         this._playerNum = playerNum;
         this._color = colorOption;
@@ -96,15 +121,16 @@ class Snake {
             };
         }
         if (playerNum === 1) {
-            this._segments = [{ x: 5 * gridWidth / 6 - 1, y: gridHeight / 4 }];
+            this._segments = (!this._isFake) ? [{ x: 5 * gridWidth / 6 - 1, y: gridHeight / 4 }] : [{ x: gridWidth - 1, y: 0 }];
             this.newDirection = this.direction = 1;
         }
         else {
-            this._segments = [{ x: gridWidth / 6, y: 3 * gridHeight / 4 - 1 }];
+            this._segments = (!this._isFake) ? [{ x: gridWidth / 6, y: 3 * gridHeight / 4 - 1 }] : [{ x: 0, y: 1 }];
             this.newDirection = this.direction = 3;
         }
-        console.warn(this._segments);
-        removeCoord(game.freeSpots, this._head);
+        if (!this._isFake) {
+            removeCoord(game.freeSpots, this._head);
+        }
     }
     draw() {
         const translation = gridLineWidth / 2;
@@ -145,7 +171,7 @@ class Snake {
         }
     }
     checkForGameOver() {
-        if (this._head.x < 0 || this._head.x > gridWidth || this._head.y < 0 || this._head.y > gridHeight) {
+        if (this._head.x < 0 || this._head.x >= gridWidth || this._head.y < 0 || this._head.y >= gridHeight) {
             game.gameOver(this._playerNum);
         }
         for (let snake of snakes) {
@@ -165,20 +191,40 @@ class Snake {
             y: this._head.y + ((this.newDirection % 2 === 0) ? this.newDirection - 1 : 0)
         };
         this.direction = this.newDirection;
-        if (!!this.queuedDirection) {
-            if (this.direction % 2 !== this.queuedDirection % 2) {
-                this.newDirection = this.queuedDirection;
+        if (!this._isFake) {
+            if (!!this.queuedDirection) {
+                if (this.direction % 2 !== this.queuedDirection % 2) {
+                    this.newDirection = this.queuedDirection;
+                }
+                this.queuedDirection = null;
             }
-            this.queuedDirection = null;
+            this._segments.unshift(newHead);
+            removeCoord(game.freeSpots, newHead);
+            this._checkFood();
         }
-        this._segments.unshift(newHead);
-        removeCoord(game.freeSpots, newHead);
-        this._checkFood();
+        else {
+            if (newHead.x === 0 && newHead.y === 0) {
+                this.newDirection = directions['down'];
+            }
+            else if (newHead.x === 0 && newHead.y === 1) {
+                this.newDirection = directions['right'];
+            }
+            else if (newHead.x === gridWidth - 1 && newHead.y === 1) {
+                this.newDirection = directions['up'];
+            }
+            else if (newHead.x === gridWidth - 1 && newHead.y === 0) {
+                this.newDirection = directions['left'];
+            }
+            this._segments.unshift(newHead);
+        }
         if (this._segmentsToAdd > 0) {
             this._segmentsToAdd--;
         }
-        else {
+        else if (!this._isFake) {
             game.freeSpots.push(this._segments.pop());
+        }
+        else {
+            this._segments.pop();
         }
     }
 }
@@ -186,15 +232,30 @@ class Game {
     constructor() {
         this._paused = false;
         this._gameLoop = (timestamp) => {
-            if (!this._lastTimeStamp || (timestamp - this._lastTimeStamp) > this._difficulty) {
+            if (!this._lastTimeStamp) {
+                this._lastTimeStamp = timestamp;
+                for (let snake of snakes) {
+                    snake.draw();
+                }
+                if (this._firstAnimtionsFrame) {
+                    this._firstAnimtionsFrame = false;
+                    this._spawnFood();
+                }
+                this._drawFood();
+            }
+            else if ((timestamp - this._lastTimeStamp) > this._difficulty) {
                 this._lastTimeStamp = timestamp;
                 this._drawGrid();
                 for (let snake of snakes) {
                     snake.move();
-                    snake.draw();
                 }
                 for (let snake of snakes) {
                     snake.checkForGameOver();
+                }
+                if (!this._gameOver) {
+                    for (let snake of snakes) {
+                        snake.draw();
+                    }
                 }
                 if (this._gameOver) {
                     //do stuff
@@ -203,15 +264,41 @@ class Game {
                 if (this.foodEaten) {
                     this._spawnFood();
                 }
-                const translation = gridLineWidth * 2;
-                const foodWidth = squareHeight - 4 * gridLineWidth;
-                context.fillStyle = Colors.FOOD;
-                context.fillRect(food.x * squareHeight + translation, food.y * squareHeight + translation, foodWidth, foodWidth);
+                this._drawFood();
             }
-            if (!this._paused && !this._gameOver) {
+            if (!this._paused) {
                 this._loopId = requestAnimationFrame(this._gameLoop);
             }
         };
+        this._fakeLoop = (timestamp) => {
+            if (!this._lastTimeStamp) {
+                this._lastTimeStamp = timestamp;
+                for (let snake of snakes) {
+                    snake.draw();
+                }
+            }
+            else if ((timestamp - this._lastTimeStamp) > this._difficulty) {
+                this._lastTimeStamp = timestamp;
+                this._drawGrid();
+                for (let snake of snakes) {
+                    snake.move();
+                    snake.draw();
+                }
+            }
+            this._loopId = requestAnimationFrame(this._fakeLoop);
+        };
+    }
+    makeFakeSnakes() {
+        snakes = [new Snake(1, { left: null, up: null, right: null, down: null }, snakeColors[1], true)];
+        if (numberOfPlayers === 2) {
+            snakes.push(new Snake(2, { left: null, up: null, right: null, down: null }, snakeColors[2], true));
+        }
+        this._loopId = requestAnimationFrame(this._fakeLoop);
+    }
+    init() {
+        this.hasStarted = false;
+        this.setDifficulty();
+        this.setGridSize();
     }
     _spawnFood() {
         this.foodEaten = false;
@@ -221,33 +308,51 @@ class Game {
         }
         food = this.freeSpots[Math.floor(Math.random() * this.freeSpots.length)];
     }
+    _drawFood() {
+        const translation = gridLineWidth * 2;
+        const foodWidth = squareHeight - 4 * gridLineWidth;
+        context.fillStyle = Colors.FOOD;
+        context.fillRect(food.x * squareHeight + translation, food.y * squareHeight + translation, foodWidth, foodWidth);
+    }
     gameOver(playerNum) {
         this._gameOver = true;
         this._losers.push(playerNum);
         this.pause(true);
     }
-    startGame(options) {
+    setDifficulty() {
+        this._difficulty = difficulties[difficulty];
+    }
+    setGridSize() {
+        gridWidth = gridWidths[gridSize];
+        gridHeight = gridWidth * 2 / 3;
+        growthPerFood = gridWidth / 6;
+        this.recalculateAndDrawGrid();
+    }
+    startGame() {
+        this.stopAnimation();
+        this._drawGrid();
+        menu.style.zIndex = '0';
+        canvas.style.zIndex = '1';
+        this.hasStarted = true;
         this._losers = [];
         this._gameOver = false;
-        this._playerNum = options.playerNum;
-        this._difficulty = difficulties[options.difficulty];
-        gridWidth = gridWidths[options.gridSize];
-        gridHeight = gridWidth * 2 / 3;
         this.freeSpots = [];
         for (let x = 0; x < gridWidth; x++) {
             for (let y = 0; y < gridHeight; y++) {
                 this.freeSpots.push({ x, y });
             }
         }
-        growthPerFood = gridWidth / 6;
-        snakes = [new Snake(1, { left: 37, up: 38, right: 39, down: 40 }, Colors.RANDOM)];
-        if (options.playerNum === 2) {
-            snakes.push(new Snake(2, { left: 65, up: 87, right: 68, down: 83 }, Colors.RAINBOW));
+        snakes = [new Snake(1, { left: 37, up: 38, right: 39, down: 40 }, snakeColors[1])];
+        if (numberOfPlayers === 2) {
+            snakes.push(new Snake(2, { left: 65, up: 87, right: 68, down: 83 }, snakeColors[2]));
         }
         this._spawnFood();
-        this.startAnimation();
+        this.startAnimation(true);
     }
-    startAnimation() {
+    startAnimation(initialStart = false) {
+        if (initialStart) {
+            this._firstAnimtionsFrame = true;
+        }
         this._loopId = requestAnimationFrame(this._gameLoop);
     }
     stopAnimation() {
@@ -270,7 +375,7 @@ class Game {
         this._paused = pause;
     }
     resize() {
-        if (!this._paused) {
+        if (!this._paused && game.hasStarted) {
             this.pause(true);
         }
         this.recalculateAndDrawGrid();
