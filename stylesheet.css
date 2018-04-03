@@ -1,6 +1,6 @@
 canvas {
     position: absolute;
-    border: 4px solid rgb(37, 93, 136);
+    border: 4px solid #255D88;
 }
 
 #menu {
@@ -14,13 +14,74 @@ div, p {
 }
 
 body {
-    background-color: rgb(27, 62, 88);
+    background-color: #1B3E58;
     overflow: hidden;
 }
 
 p {
-    font-family: "Times New Roman", Times, serif;
-    font-weight: 800;
-    color: white;
-    font-size: 150%;
+    font-weight: 700;
+    font-size: 140%;
+}
+
+#options p {
+    font-weight: 900;
+    font-size: 190%;
+}
+
+#playerNumOptions button, #difficultyOptions button, #gridSizeOptions button {
+    width: 10%;
+    margin: 0 2% 0 2%;
+}
+
+#player1ColorOptions button, #player2ColorOptions button {
+    margin: 0 1% 0 1%;
+}
+
+p, button {
+    font-family: "Trebuchet MS";
+    color: #4B84AF;
+}
+
+button {
+    background-color: #1B3E58;
+    border: 2px solid #4B84AF;
+    outline: none;
+    border-radius: 3px;
+    font-weight: 400;
+    font-size: 100%;
+    box-shadow: 2px 4px #255D88, 1.5px 3px #255D88, 1px 2px #255D88, .5px 1px #255D88;
+}
+
+.red:hover {
+    background-color: #B30000;
+}
+
+.orange:hover {
+    background-color: #B36B00;
+}
+
+.yellow:hover {
+    background-color: #B3B300;
+}
+
+.green:hover {
+    background-color: #33CC00;
+}
+
+.blue:hover {
+    background-color: #0000B3;
+}
+
+.purple:hover {
+    background-color: #4D0099;
+}
+
+button:hover {
+    background-color: rgb(23, 52, 75);
+    border-color: rgb(67, 118, 156);
+}
+
+button:active {
+    box-shadow: 1px 3px #1B3E58, .5px 1.5px #1B3E58;
+    transform: translate(1px, 2px);
 }
