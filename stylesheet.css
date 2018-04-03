@@ -5,9 +5,22 @@ canvas {
 
 #menu {
     position: absolute;
-    background-color: black;
+}
+
+div, p {
+    margin: 0;
+    padding: 0;
+    text-align: center;
 }
 
 body {
     background-color: rgb(27, 62, 88);
+    overflow: hidden;
+}
+
+p {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: 800;
+    color: white;
+    font-size: 150%;
 }
