@@ -25,7 +25,7 @@ let growthPerFood;
 let gridLineWidth;
 let snakes;
 let food;
-let snakeColors = { 1: Colors.RANDOM, 2: Colors.RANDOM };
+let snakeColors = { 1: Colors.RED, 2: Colors.BLUE };
 let difficulty = 3;
 let gridSize = 1;
 let numberOfPlayers = 1;
