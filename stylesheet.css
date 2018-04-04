@@ -58,7 +58,6 @@ button {
 
 .red:hover, .red.selected {
     background-color: #B30000;
-    color: black;
 }
 
 .orange:hover, .orange.selected {
@@ -78,12 +77,10 @@ button {
 
 .blue:hover, .blue.selected {
     background-color: #0000B3;
-    color: black;
 }
 
 .purple:hover, .purple.selected {
     background-color: #4D0099;
-    color: black;
 }
 
 .rainbow:hover, .rainbow.selected {
