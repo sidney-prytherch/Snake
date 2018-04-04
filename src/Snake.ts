@@ -1,6 +1,5 @@
 type KeyMap = {up: number, left: number, down: number, right: number};
 type Coord = {x: number, y: number};
-type SnakeColors = {[playerNum: number]: Colors};
 
 enum Colors {
     FOOD = '#683200',
@@ -29,9 +28,9 @@ let growthPerFood: number;
 let gridLineWidth: number;
 let snakes: Snake[];
 let food: Coord;
-let snakeColors: SnakeColors = {1: Colors.RED, 2: Colors.BLUE};
+let snakeColors = {1: Colors.RED, 2: Colors.BLUE};
 let difficulty = 3;
-let gridSize = 1;
+let gridSize = 3;
 let numberOfPlayers = 1;
 
 const minCanvasHeight = 460;
@@ -88,10 +87,19 @@ function setUpMenu() {
 function setUpButtons() {
     const playerNumButtons = document.getElementsByClassName('playerNum');
     for (let playerNumButton of playerNumButtons) {
+        if (parseInt(playerNumButton.innerHTML) === numberOfPlayers) {
+            playerNumButton.classList.add('selected');
+        }
         playerNumButton.addEventListener('click', () => {
             const previousNumberOfPlayers = numberOfPlayers;
             numberOfPlayers = parseInt(playerNumButton.innerHTML);
             if (previousNumberOfPlayers !== numberOfPlayers) {
+                for (let button of playerNumButtons) {
+                    if (button.classList.contains('selected')) {
+                        button.classList.remove('selected');
+                    }
+                }
+                playerNumButton.classList.add('selected');
                 setUpMenu();
                 game.makeSnakes();
             }
@@ -99,10 +107,19 @@ function setUpButtons() {
     }
     const difficultyButtons = document.getElementsByClassName('difficulty');
     for (let difficultyButton of difficultyButtons) {
+        if (parseInt(difficultyButton.innerHTML) === difficulty) {
+            difficultyButton.classList.add('selected');
+        }
         difficultyButton.addEventListener('click', () => {
             const previousDifficulty = difficulty;
             difficulty = parseInt(difficultyButton.innerHTML);
             if (previousDifficulty !== difficulty) {
+                for (let button of difficultyButtons) {
+                    if (button.classList.contains('selected')) {
+                        button.classList.remove('selected');
+                    }
+                }
+                difficultyButton.classList.add('selected');
                 game.setDifficulty();
                 game.makeSnakes();
             }
@@ -110,10 +127,19 @@ function setUpButtons() {
     }
     const gridSizeButtons = document.getElementsByClassName('gridSize');
     for (let gridSizeButton of gridSizeButtons) {
+        if (parseInt(gridSizeButton.innerHTML) === gridSize) {
+            gridSizeButton.classList.add('selected');
+        }
         gridSizeButton.addEventListener('click', () => {
             const previousGridSize = gridSize;
             gridSize = parseInt(gridSizeButton.innerHTML);
             if (previousGridSize !== gridSize) {
+                for (let button of gridSizeButtons) {
+                    if (button.classList.contains('selected')) {
+                        button.classList.remove('selected');
+                    }
+                }
+                gridSizeButton.classList.add('selected');
                 game.setGridSize();
                 setUpMenu();
                 game.makeSnakes();
@@ -125,13 +151,24 @@ function setUpButtons() {
         const playerButtonOptions = document.getElementById('player' + i + 'ColorOptions');
         const playerColorButtons = playerButtonOptions.getElementsByTagName('button');
         for (let playerColorButton of playerColorButtons) {
+            if (snakeColors[i] === Colors[playerColorButton.innerHTML.toUpperCase()]) {
+                playerColorButton.classList.add('selected');
+            }
             playerColorButton.addEventListener('click', () => {
-                const color = playerColorButton.innerHTML.toUpperCase();
                 const previousColor = snakeColors[i];
-                snakeColors[i] = Colors[color];
-                if (color === 'RANDOM') {
-                    snakes[i - 1].resetFakeSnakeColor()
-                } else if (previousColor === snakeColors[i]) {
+                snakeColors[i] = Colors[playerColorButton.innerHTML.toUpperCase()];
+                //const color = playerColorButton.innerHTML.toUpperCase();
+                if (snakeColors[i] === 'RANDOM') {
+                    snakes[i - 1].resetFakeSnakeColor();
+                }
+                if (previousColor !== snakeColors[i]) {
+                    for (let button of playerColorButtons) {
+                        if (button.classList.contains('selected')) {
+                            button.classList.remove('selected');
+                        }
+                    }
+                    playerColorButton.classList.add('selected');
+                } else if (snakeColors[i] !== 'RANDOM') {
                     return;
                 }
                 game.makeSnakes();
@@ -438,10 +475,11 @@ class Game {
         this.stopAnimation();
         const messageElement = document.getElementById('options');
         if (numberOfPlayers === 1) {
-            messageElement.innerHTML = '<p>You died. Your score was ' + snakes[0].score + '.</p>'
+            messageElement.innerHTML = '<p>You died. Your score was ' + snakes[0].score + '. Press space to play again.</p>'
         } else {
-            const message = '<p>' + (this._losers.length === 1 ? 'P' + this._losers[0] + ' died.' : 'Both snakes died.');
-            messageElement.innerHTML = message + ' P1 got ' + snakes[0].score + ' and P2 got ' + snakes[1].score + '.</p>';
+            let message = '<p>' + (this._losers.length === 1 ? 'P' + this._losers[0] + ' died.' : 'Both snakes died.');
+            message += ' P1 got ' + snakes[0].score + ' and P2 got ' + snakes[1].score;
+            messageElement.innerHTML = message + '. Press space to play!</p>';
         }
         for (let snake of snakes) {
             snake.resetFakeSnakeStats();
