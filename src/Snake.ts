@@ -221,7 +221,6 @@ window.addEventListener('DOMContentLoaded', () => {
     game.init();
     setUpMenu();
     setUpButtons();
-    placePauseDiv();
 }, false);
 
 window.addEventListener('resize', () => {
