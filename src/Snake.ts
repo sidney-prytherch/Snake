@@ -20,7 +20,6 @@ let canvas: HTMLCanvasElement;
 let menu: HTMLElement;
 let pauseDiv: HTMLElement;
 let context: CanvasRenderingContext2D;
-let foodCoord: {x: number, y: number};
 let game: Game;
 let gridWidth: number;
 let gridHeight: number;
