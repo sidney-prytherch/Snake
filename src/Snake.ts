@@ -18,6 +18,7 @@ enum Colors {
 
 let canvas: HTMLCanvasElement;
 let menu: HTMLElement;
+let pauseDiv: HTMLElement;
 let context: CanvasRenderingContext2D;
 let foodCoord: {x: number, y: number};
 let game: Game;
@@ -52,6 +53,15 @@ function removeCoord(coords: Coord[], element: Coord) {
             return;
         }
     }
+}
+
+function placePauseDiv() {
+    const canvasHeight = parseInt(canvas.style.height, 10);
+    const largestSquareHeight = (canvasHeight / (gridWidths[1] / heightToWidthRatio));
+    pauseDiv.style.height = largestSquareHeight + 'px';
+    pauseDiv.style.top = parseInt(canvas.style.top, 10) + (canvasHeight - largestSquareHeight) / 2 + 'px';
+    pauseDiv.style.left = parseInt(canvas.style.left, 10) + 'px';
+    pauseDiv.style.width = parseInt(canvas.style.width, 10) + 'px';
 }
 
 function hexToRgb(hex: string): {r: number, g: number, b: number} {
@@ -204,12 +214,15 @@ window.addEventListener('keydown', (event) => {
 
 window.addEventListener('DOMContentLoaded', () => {
     menu = document.getElementById('menu');
+    pauseDiv = document.getElementById('pause');
+    pauseDiv.style.visibility = 'hidden';
     canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement;
     context = canvas.getContext('2d');
     game = new Game();
     game.init();
     setUpMenu();
     setUpButtons();
+    placePauseDiv();
 }, false);
 
 window.addEventListener('resize', () => {
@@ -219,6 +232,8 @@ window.addEventListener('resize', () => {
             snakes[i].draw();
         }
         setUpMenu();
+    } else if (game.paused) {
+        placePauseDiv();
     }
 }, false);
 
@@ -498,6 +513,8 @@ class Game {
     }
 
     public init() {
+        setUpMenu();
+        menu.style.visibility = 'visible';
         this.hasStarted = false;
         this.setDifficulty();
         this.setGridSize();
@@ -539,6 +556,7 @@ class Game {
     public startGame() {
         this.stopAnimation();
         menu.style.zIndex = '0';
+        menu.style.visibility = 'hidden';
         canvas.style.zIndex = '1';
         this.hasStarted = true;
         this._losers = [];
@@ -573,12 +591,15 @@ class Game {
     public pause(pause: boolean = !this._paused) {
         if (pause) {
             if (!this._paused) {
+                placePauseDiv();
+                pauseDiv.style.visibility = 'visible';
                 this.stopAnimation();
                 this._drawGrid();
             } else {
                 return;
             }
         } else if (this._paused) {
+            pauseDiv.style.visibility = 'hidden';
             this.startAnimation();
         }
         this._paused = pause;
