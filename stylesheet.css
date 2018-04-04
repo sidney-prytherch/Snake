@@ -58,26 +58,37 @@ button {
 
 .red:hover, .red.selected {
     background-color: #B30000;
+    color: black;
 }
 
 .orange:hover, .orange.selected {
     background-color: #B36B00;
+    color: black;
 }
 
 .yellow:hover, .yellow.selected {
     background-color: #B3B300;
+    color: black;
 }
 
 .green:hover, .green.selected {
     background-color: #33CC00;
+    color: black;
 }
 
 .blue:hover, .blue.selected {
     background-color: #0000B3;
+    color: black;
 }
 
 .purple:hover, .purple.selected {
     background-color: #4D0099;
+    color: black;
+}
+
+.rainbow:hover, .rainbow.selected {
+    background: linear-gradient(to right, #B30000, #B36B00, #B3B300, #33CC00, #0000B3, #4D0099);
+    color: black;
 }
 
 button:hover, .selected {
