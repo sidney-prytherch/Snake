@@ -17,7 +17,6 @@ let canvas;
 let menu;
 let pauseDiv;
 let context;
-let foodCoord;
 let game;
 let gridWidth;
 let gridHeight;
@@ -215,7 +214,6 @@ window.addEventListener('DOMContentLoaded', () => {
     game.init();
     setUpMenu();
     setUpButtons();
-    placePauseDiv();
 }, false);
 window.addEventListener('resize', () => {
     game.resize();
