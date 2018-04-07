@@ -169,11 +169,19 @@ function setUpButtons() {
                 //const color = playerColorButton.innerHTML.toUpperCase();
                 if (snakeColors[i] === 'RANDOM') {
                     snakes[i - 1].resetFakeSnakeColor();
+                    const colors = snakes[i - 1].colors;
+                    let color = 'linear-gradient( to right, rgb(';
+                    color += colors[0].r + ',' + colors[0].g + ',' + colors[0].b + '), rgb(';
+                    color += colors[1].r + ',' + colors[1].g + ',' + colors[1].b + ') )';
+                    playerColorButton.style.backgroundImage = color;
                 }
                 if (previousColor !== snakeColors[i]) {
                     for (let button of playerColorButtons) {
                         if (button.classList.contains('selected')) {
                             button.classList.remove('selected');
+                            if (button.classList.contains('random')) {
+                                button.style.backgroundImage = 'none';
+                            }
                         }
                     }
                     playerColorButton.classList.add('selected');
@@ -252,7 +260,7 @@ class Snake {
     public queuedDirection: number;
     private _segments: Coord[];
     private _segmentsToAdd: number;
-    private _colors: {r: number[], g: number[], b: number[]};
+    public colors: {r: number, g: number, b: number}[];
     
     constructor(playerNum: number) {
         this.keyMap = playerNum === 1 ? {left: 37, up: 38, right: 39,  down: 40} : {left: 65, up: 87, right: 68,  down: 83};
@@ -277,11 +285,15 @@ class Snake {
 
     public resetFakeSnakeColor() {
         if (snakeColors[this._playerNum] === Colors.RANDOM) {
-            this._colors = {
-                r: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
-                g: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)],
-                b: [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
-            };
+            this.colors = [{
+                r: Math.floor(Math.random() * 255),
+                g: Math.floor(Math.random() * 255),
+                b: Math.floor(Math.random() * 255)
+            }, {
+                r: Math.floor(Math.random() * 255),
+                g: Math.floor(Math.random() * 255),
+                b: Math.floor(Math.random() * 255)
+            }];
         }
     }
 
@@ -336,8 +348,8 @@ class Snake {
                 const frac = count / ((this._segments.length - 1) || 1);
                 count++;
                 let color = {r: 0, g: 0, b: 0};
-                for (let c in this._colors) {
-                    color[c] = this._colors[c][0] + Math.round(frac * (this._colors[c][1] - this._colors[c][0]));
+                for (let c in color) {
+                    color[c] = this.colors[0][c] + Math.round(frac * (this.colors[1][c] - this.colors[0][c]));
                 }
                 context.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
                 context.fillRect(segment.x * squareHeight + translation, segment.y * squareHeight + translation, snakeWidth, snakeWidth);

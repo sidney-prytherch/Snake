@@ -88,6 +88,10 @@ button {
     color: black;
 }
 
+.random.selected {
+    color: black;
+}
+
 button:hover, .selected {
     background-color: #112233;
     border-color: #43769C;
